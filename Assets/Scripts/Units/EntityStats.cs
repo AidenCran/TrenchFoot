@@ -1,19 +1,5 @@
-namespace Entities
+namespace Units
 {
-    public enum StatType
-    {
-        Health,
-        Speed,
-        Damage,
-        XPGain
-    }
-
-    public enum UnitType
-    {
-        Ally,
-        Enemy
-    }
-
     public struct TempEntityStats
     {
         public TempEntityStats(float maxHP, float moveSpeed, float damage, float range)

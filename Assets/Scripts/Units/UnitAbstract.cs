@@ -2,18 +2,18 @@ using System.Collections;
 using DefaultNamespace;
 using UnityEngine;
 
-namespace Entities
+namespace Units
 {
     public abstract class UnitAbstract : MonoBehaviour, IDamageable
     {
+        TempEntityStats _stats;
+        
         // TODO: Hit Chance = Lower It In Trench
         
         public Vector3 spawnPoint;
         public LayerMask oppositionLayerMask;
-        
+
         public bool isMovingLeft;
-    
-        TempEntityStats _stats;
 
         Rigidbody2D _rb;
 
@@ -21,7 +21,7 @@ namespace Entities
         
         readonly WaitForSeconds _reloadDelay = new(0.5f);
 
-        protected void Start()
+        protected virtual void Start()
         {
             _stats = new TempEntityStats
             {
@@ -46,9 +46,7 @@ namespace Entities
                 return;
             }
 
-            Vector2 direction;
-            if (isMovingLeft) direction = Vector2.left;
-            else direction = Vector2.right;
+            var direction = isMovingLeft ? Vector2.left : Vector2.right;
 
             // Else Move Forward
             _rb.velocity = new Vector2(direction.x * _stats.MoveSpeed, 0);
@@ -118,9 +116,6 @@ namespace Entities
             }
         }
 
-        void OnDrawGizmos()
-        {
-            Gizmos.DrawWireSphere(transform.position, _stats.Range);   
-        }
+        void OnDrawGizmosSelected() => Gizmos.DrawWireSphere(transform.position, _stats.Range);
     }
 }
