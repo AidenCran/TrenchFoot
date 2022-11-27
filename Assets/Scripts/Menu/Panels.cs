@@ -6,18 +6,33 @@ using UnityEngine.SceneManagement;
 public class Panels : MonoBehaviour
 {
     public GameObject MenuPanel;
-    public GameObject ControlsPanel;
+    public GameObject TutorialPanel;
+    public GameObject SystemPanel;
 
     public void StartTutorial()
     {
         MenuPanel.SetActive(false);
-        ControlsPanel.SetActive(true);
+        TutorialPanel.SetActive(true);
     }
 
     public void ExitTutorial()
     {
         MenuPanel.SetActive(true);
-        ControlsPanel.SetActive(false);
+        TutorialPanel.SetActive(false);
     }
+
+    public void StartSystem()
+    {
+        TutorialPanel.SetActive(false);
+        SystemPanel.SetActive(true);
+    }
+
+    public void ExitSystem()
+    {
+        TutorialPanel.SetActive(true);
+        SystemPanel.SetActive(false);
+    }
+
+
 
 }
