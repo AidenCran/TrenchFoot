@@ -41,6 +41,8 @@ public class SoundManager : MonoBehaviour
     public float musicVol => _musicSource.volume;
     public float soundVol => _soundSource.volume;
 
+    public List<AudioClip> RandomBackgroundSounds = new();
+
     public void SetMusicVolume(float x)
     {
         _setVolume = x;
@@ -69,6 +71,15 @@ public class SoundManager : MonoBehaviour
     {
         if (_defaultMusic == null) return;
         PlayMusic(_defaultMusic);
+
+        try
+        {
+            InvokeRepeating(nameof(PlayRandomBackgroundSound), 30, 30);
+        }
+        catch
+        {
+            
+        }
     }
 
     public async void PlayMusic(AudioClip clip)
@@ -95,6 +106,12 @@ public class SoundManager : MonoBehaviour
         _soundSource.time = skipToTime;
         _soundSource.clip = clip;
         _soundSource.Play();
+    }
+
+    void PlayRandomBackgroundSound()
+    {
+        if (RandomBackgroundSounds.Count == 0) return;
+        PlaySound(RandomBackgroundSounds.SelectRandom());
     }
 
     public void PlayDefaultMusic() => PlayMusic(_defaultMusic);

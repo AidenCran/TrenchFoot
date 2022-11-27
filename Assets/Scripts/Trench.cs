@@ -53,6 +53,8 @@ public class Trench : MonoBehaviour
         
         unit.isInTrench = true;
         unit.hitChance -= _trenchHitReduction;
+
+        // unit.OnDeath?.AddListener(()=>RemoveUnit(unit));
         
         // Play Enter Anim
         unit.EnterTrenchAnim();
@@ -69,10 +71,15 @@ public class Trench : MonoBehaviour
         });
     }
 
-    void ExitTrench(UnitAbstract unit)
+    void RemoveUnit(UnitAbstract unit)
     {
         _unitsInTrench.Remove(unit);
         _countInTrench--;
+    }
+
+    void ExitTrench(UnitAbstract unit)
+    {
+        RemoveUnit(unit);
         
         if (unit.state == UnitStates.Dead) return;
         

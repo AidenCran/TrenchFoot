@@ -5,12 +5,15 @@ using DefaultNamespace;
 using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 using Random = System.Random;
 
 namespace Units
 {
     public abstract class UnitAbstract : MonoBehaviour, IDamageable
     {
+        [HideInInspector] public UnityEvent OnDeath;
+        
         protected TempEntityStats Stats;
         
         // TODO: Hit Chance = Lower It In Trench
@@ -40,9 +43,7 @@ namespace Units
 
         Vector2 _unitAttackRange;
 
-        SpriteRenderer _spriteRenderer;
-
-        public SpriteRenderer GetRenderer => _spriteRenderer;
+        public SpriteRenderer GetRenderer { get; private set; }
 
         AudioSource _audioSource;
 
@@ -53,7 +54,7 @@ namespace Units
             _audioSource = GetComponent<AudioSource>();
             _rb = GetComponent<Rigidbody2D>();
             animator = GetComponentInChildren<Animator>();
-            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            GetRenderer = GetComponentInChildren<SpriteRenderer>();
 
             state = UnitStates.Invincible;
         }
@@ -133,9 +134,7 @@ namespace Units
             if (x == null) return (null, false);
             
             x.TryGetComponent<UnitAbstract>(out var unit);
-            if (unit.state == UnitStates.Dead) return (null, false);
-            
-            return (unit, true);
+            return unit.state == UnitStates.Dead ? (null, false) : (unit, true);
         }
 
         public void TakeDamage(float damage)
@@ -163,9 +162,10 @@ namespace Units
             state = UnitStates.Dead;
             animator.CrossFade(_death, 0, 0);
             
-            _audioSource.clip = UnitSounds.DieSound;
-            _audioSource.Play();
+            PlaySound(UnitSounds.DieSound);
 
+            OnDeath?.Invoke();
+            
             StartCoroutine(Wait());
             IEnumerator Wait()
             {
@@ -184,8 +184,7 @@ namespace Units
             animator.CrossFade(_shoot, 0, 0);
             
             // Play Sound
-            _audioSource.clip = UnitSounds.ShootSound;
-            _audioSource.Play();
+            PlaySound(UnitSounds.ShootSound);
             
             // Reload
             Reload();
@@ -204,10 +203,16 @@ namespace Units
 
         public void ReleaseUnit()
         {
-            _spriteRenderer.DOFade(0, 2).OnComplete(() =>
+            GetRenderer.DOFade(0, 2).OnComplete(() =>
             {
                 gameObject.SetActive(false);
             });
+        }
+        
+        void PlaySound(AudioClip clip)
+        {
+            _audioSource.clip = clip;
+            _audioSource.Play();
         }
 
         public void EnterTrenchAnim() => animator.CrossFade(_drop, 0, 0);
