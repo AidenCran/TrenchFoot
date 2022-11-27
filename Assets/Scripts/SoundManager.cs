@@ -26,10 +26,10 @@ public class SoundManager : MonoBehaviour
 
     #endregion
 
-    [SerializeField] AudioSource _musicSource;
-    [SerializeField] AudioSource _soundSource;
+    [SerializeField] AudioSource musicSource;
+    [SerializeField] AudioSource soundSource;
 
-    [SerializeField] AudioClip _defaultMusic;
+    [SerializeField] AudioClip defaultMusic;
 
     float _musicMaxVolume;
     float _setVolume;
@@ -38,30 +38,30 @@ public class SoundManager : MonoBehaviour
 
     public float MaxVolume => _musicMaxVolume;
 
-    public float musicVol => _musicSource.volume;
-    public float soundVol => _soundSource.volume;
+    public float musicVol => musicSource.volume;
+    public float soundVol => soundSource.volume;
 
-    public List<AudioClip> RandomBackgroundSounds = new();
+    public List<AudioClip> randomBackgroundSounds = new();
 
     public void SetMusicVolume(float x)
     {
         _setVolume = x;
-        _musicSource.volume = x;
+        musicSource.volume = x;
     }
 
     public void SetSoundVolume(float x)
     {
         _setVolume = x;
-        _soundSource.volume = x;
+        soundSource.volume = x;
     }
 
     void Awake()
     {
         Singleton();
 
-        _musicSource.loop = true;
-        _musicMaxVolume = _musicSource.volume;
-        _musicSource.volume = 0;
+        musicSource.loop = true;
+        _musicMaxVolume = musicSource.volume;
+        musicSource.volume = 0;
 
         // Set Volume = 60%
         _setVolume = _musicMaxVolume * .60f;
@@ -69,50 +69,36 @@ public class SoundManager : MonoBehaviour
 
     void Start()
     {
-        if (_defaultMusic == null) return;
-        PlayMusic(_defaultMusic);
+        if (defaultMusic == null) return;
+        PlayMusic(defaultMusic);
 
-        try
-        {
-            InvokeRepeating(nameof(PlayRandomBackgroundSound), 30, 30);
-        }
-        catch
-        {
-            
-        }
+        InvokeRepeating(nameof(PlayRandomBackgroundSound), 15, 15);
     }
 
-    public async void PlayMusic(AudioClip clip)
+    public void PlayMusic(AudioClip clip)
     {
-        _musicSource.clip = clip;
-        
-        if (_musicSource.isPlaying)
-        {
-            await _musicSource.DOFade(0, _duration).AsyncWaitForCompletion();
-        }
-        
-        _musicSource.Play();
-        await _musicSource.DOFade(_setVolume, _duration).AsyncWaitForCompletion();
+        musicSource.clip = clip;
+        musicSource.Play();
     }
 
     public void PlaySound(AudioClip clip)
     {
-        _soundSource.clip = clip;
-        _soundSource.Play();
+        soundSource.clip = clip;
+        soundSource.Play();
     }
 
     public void PlaySound(AudioClip clip, float skipToTime)
     {
-        _soundSource.time = skipToTime;
-        _soundSource.clip = clip;
-        _soundSource.Play();
+        soundSource.time = skipToTime;
+        soundSource.clip = clip;
+        soundSource.Play();
     }
 
     void PlayRandomBackgroundSound()
     {
-        if (RandomBackgroundSounds.Count == 0) return;
-        PlaySound(RandomBackgroundSounds.SelectRandom());
+        if (randomBackgroundSounds.Count == 0) return;
+        PlaySound(randomBackgroundSounds.SelectRandom());
     }
 
-    public void PlayDefaultMusic() => PlayMusic(_defaultMusic);
+    public void PlayDefaultMusic() => PlayMusic(defaultMusic);
 }

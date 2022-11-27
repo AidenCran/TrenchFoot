@@ -12,7 +12,8 @@ namespace Units
 {
     public abstract class UnitAbstract : MonoBehaviour, IDamageable
     {
-        [HideInInspector] public UnityEvent OnDeath;
+        [HideInInspector] public UnityEvent<UnitAbstract> OnDeath;
+        [HideInInspector] public Action OnRelease;
         
         protected TempEntityStats Stats;
         
@@ -36,6 +37,7 @@ namespace Units
         
         [SerializeField] Animator animator;
 
+        readonly int _idle = Animator.StringToHash("WalkSolo");
         readonly int _shoot = Animator.StringToHash("ShootSolo");
         readonly int _climbUpProper = Animator.StringToHash("ClimbSolo");
         readonly int _death = Animator.StringToHash("DeathSolo");
@@ -56,11 +58,19 @@ namespace Units
             animator = GetComponentInChildren<Animator>();
             GetRenderer = GetComponentInChildren<SpriteRenderer>();
 
-            state = UnitStates.Invincible;
+            Init();
         }
 
         protected virtual void Start()
         {
+            Init();
+            if (animator == null) print("Animator Null");
+        }
+
+        public void Init()
+        {
+            state = UnitStates.Invincible;
+            
             Stats = new TempEntityStats
             {
                 MaxHealth = 10,
@@ -69,12 +79,13 @@ namespace Units
                 Damage = 5,
                 Range = 5f,
             };
-
-            if (animator == null) print("Animator Null");
-
+            
             _unitAttackRange = new Vector2(Stats.Range, 10);
             transform.position = spawnPoint;
 
+            animator.CrossFade(_idle, 0, 0);
+            GetRenderer.DOFade(1, 0);
+            
             StartCoroutine(IFrames());
             IEnumerator IFrames()
             {
@@ -101,6 +112,8 @@ namespace Units
                 _rb.velocity = Vector2.zero;
                 return;
             }
+            
+            animator.CrossFade(_idle, 0, 0);
 
             var direction = isAlly ? Vector2.right : Vector2.left;
 
@@ -164,7 +177,7 @@ namespace Units
             
             PlaySound(UnitSounds.DieSound);
 
-            OnDeath?.Invoke();
+            OnDeath?.Invoke(this);
             
             StartCoroutine(Wait());
             IEnumerator Wait()
@@ -176,6 +189,8 @@ namespace Units
 
         void ShootUnit(UnitAbstract unit)
         {
+            if (state == UnitStates.Dead) return;
+            
             // Shoot
             state = UnitStates.Attacking;
             unit.TakeDamage(Stats.Damage);
@@ -205,7 +220,7 @@ namespace Units
         {
             GetRenderer.DOFade(0, 2).OnComplete(() =>
             {
-                gameObject.SetActive(false);
+                OnRelease?.Invoke();
             });
         }
         

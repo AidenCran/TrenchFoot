@@ -34,10 +34,13 @@ namespace Units
         // Score Manager Stays
         ScoreManager _scoreManager;
 
+        UnitManager _unitManager;
+
         void Start()
         {
             _unitDict.Add(UnitType.Rifleman, new RiflemenRecord());
 
+            _unitManager = UnitManager.Instance;
             _scoreManager = ScoreManager.instance;
             ;
             buyRiflemanButton.onClick.AddListener(() =>
@@ -91,7 +94,8 @@ namespace Units
 
         void SpawnUnit(IUnit unit, bool isAlly)
         {
-            var x = Instantiate(unit.Prefab(isAlly), null);
+            var x = isAlly ? _unitManager.GetAllyUnit() : _unitManager.GetEnemyUnit();
+            // var x = Instantiate(unit.Prefab(isAlly), null);
 
             // If Ally => Ally Parent
             var spawnPosition = isAlly ? allyParent.position : enemyParent.position;
@@ -106,6 +110,19 @@ namespace Units
             x.isAlly = isAlly;
 
             if (isAlly) StartAllySpawnDelay(unit);
+
+            x.OnRelease = () =>
+            {
+                switch (x.isAlly)
+                {
+                    case true:
+                        _unitManager.ReleaseAllyUnit(x);
+                        break;
+                    case false:
+                        _unitManager.ReleaseEnemyUnit(x);
+                        break;
+                }
+            };
         }
         
         void OnDrawGizmosSelected()

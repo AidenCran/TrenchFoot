@@ -6,6 +6,7 @@ using DefaultNamespace;
 using DG.Tweening;
 using Units;
 using UnityEngine;
+using UnityEngine.Events;
 using Utility;
 
 [RequireComponent(typeof(BoxCollider2D))]
@@ -27,7 +28,9 @@ public class Trench : MonoBehaviour
 
     bool IsTrenchEmpty => _countInTrench == 0;
 
-    float _trenchHitReduction = 50f;
+    const float _trenchHitReduction = 20f;
+
+    readonly List<UnitAbstract> _awaitingToEnterTrench = new();
 
     void Start() => _helperMonoBehaviour = HelperMonoBehaviour.Instance;
 
@@ -35,10 +38,24 @@ public class Trench : MonoBehaviour
     {
         if (!col.TryGetComponent<UnitAbstract>(out var unit)) return;
 
-        // if (unit.isAlly != _unitsInTrench[0].isAlly)
-        // {
-        //     
-        // }
+        if (_unitsInTrench.Count == 0)
+        {
+            EnterTrench(unit);
+            return;
+        }
+
+        if (unit.isAlly == _unitsInTrench[0].isAlly)
+        {
+            EnterTrench(unit);
+        }
+        
+        if (unit.isAlly != _unitsInTrench[0].isAlly)
+        {
+            // Await Entering Trench
+            unit.isInTrench = true;
+            _awaitingToEnterTrench.Add(unit);
+            return;
+        }
         
         EnterTrench(unit);
     }
@@ -54,7 +71,7 @@ public class Trench : MonoBehaviour
         unit.isInTrench = true;
         unit.hitChance -= _trenchHitReduction;
 
-        // unit.OnDeath?.AddListener(()=>RemoveUnit(unit));
+        unit.OnDeath?.AddListener(RemoveUnit);
         
         // Play Enter Anim
         unit.EnterTrenchAnim();
@@ -71,17 +88,23 @@ public class Trench : MonoBehaviour
         });
     }
 
-    void RemoveUnit(UnitAbstract unit)
+    void CheckIfTrenchIsEmpty()
     {
-        _unitsInTrench.Remove(unit);
-        _countInTrench--;
+        if (_unitsInTrench.Count != 0) return;
+        if (_awaitingToEnterTrench.Count <= 0) return;
+        
+        foreach (var unit in _awaitingToEnterTrench) EnterTrench(unit);
     }
 
     void ExitTrench(UnitAbstract unit)
     {
         RemoveUnit(unit);
         
+        unit.OnDeath?.RemoveListener(RemoveUnit);
+        CheckIfTrenchIsEmpty();
+        
         if (unit.state == UnitStates.Dead) return;
+        
         
         // Tween Unit Out Of Trench
         var newPos = unit.transform.position;
@@ -98,6 +121,12 @@ public class Trench : MonoBehaviour
             unit.isInTrench = false;
             unit.hitChance += _trenchHitReduction;
         }, Delay);
+    }
+    
+    void RemoveUnit(UnitAbstract unit)
+    {
+        _unitsInTrench.Remove(unit);
+        _countInTrench--;
     }
 
     void SetUnitLayers()

@@ -29,12 +29,12 @@ public class ScoreManager : MonoBehaviour
     
     void Awake() => Singleton();
 
-    [SerializeField] int _timeScoreIncrement = 20;
+    [SerializeField] int timeScoreIncrement = 20;
     [SerializeField] float delay = 2.5f;
 
     WaitForSeconds _delay;
 
-    [SerializeField] TMP_Text ScoreText;
+    [SerializeField] TMP_Text scoreText;
     
     void Start()
     {
@@ -43,7 +43,7 @@ public class ScoreManager : MonoBehaviour
         StartAddingScorePerSecond();
     }
 
-    public void AddScore(int score)
+    void AddScore(int score)
     {
         Score += score;
         DisplayScore();
@@ -61,10 +61,10 @@ public class ScoreManager : MonoBehaviour
         IEnumerator AddScoreOverTime()
         {
             yield return _delay;
-            AddScore(_timeScoreIncrement);
+            AddScore(timeScoreIncrement);
             StartAddingScorePerSecond();
         }
     }
 
-    void DisplayScore() => ScoreText.text = $"SCORE: {Score}";
+    void DisplayScore() => scoreText.text = $"SCORE: {Score}";
 }

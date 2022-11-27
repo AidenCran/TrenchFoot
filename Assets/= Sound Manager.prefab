@@ -174,18 +174,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6b2641a0c5889440934baa008817b58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _musicSource: {fileID: 2519055585567904539}
-  _soundSource: {fileID: 2519055585420445581}
-  _defaultMusic: {fileID: 8300000, guid: 43c9274481070a446a749f9b4ae9d544, type: 3}
-  RandomBackgroundSounds:
-  - {fileID: 8300000, guid: 67afc8ed585d0f541bcdbec11485c281, type: 3}
-  - {fileID: 8300000, guid: 7bd32737e19b5dc4bbebe63f00f850fa, type: 3}
-  - {fileID: 8300000, guid: 2460fe781f9fdd246a5337cbdfbc1276, type: 3}
-  - {fileID: 8300000, guid: d48b9cc6991d9344185beead97c44fa1, type: 3}
-  - {fileID: 8300000, guid: a193f8279b0e025498af849733c6f1c4, type: 3}
-  - {fileID: 8300000, guid: 38b6f9ef53b916240806aad37adccfab, type: 3}
-  - {fileID: 8300000, guid: 3bc1cf7e5e1ebcb478e055c0670acae6, type: 3}
-  - {fileID: 8300000, guid: f5c3b380fc82a924384a35516168403f, type: 3}
+  musicSource: {fileID: 0}
+  soundSource: {fileID: 0}
+  defaultMusic: {fileID: 0}
+  randomBackgroundSounds: []
 --- !u!1 &2519055585567904541
 GameObject:
   m_ObjectHideFlags: 0
