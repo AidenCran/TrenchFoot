@@ -187,7 +187,7 @@ Animator:
   m_GameObject: {fileID: 21460082}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3a77378ad95139741a84499283d6c603, type: 2}
+  m_Controller: {fileID: 9100000, guid: 6065959c5ac136245810cefd2e483605, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1530,11 +1530,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d0987caf2fd4f6994dc12c3ee0ec5f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnDeath:
+    m_PersistentCalls:
+      m_Calls: []
   spawnPoint: {x: 0, y: 0, z: 0}
   oppositionLayerMask:
     serializedVersion: 2
     m_Bits: 0
-  isMovingLeft: 0
+  isAlly: 0
+  isInTrench: 0
+  isAttackingTrench: 0
+  state: 1
+  animator: {fileID: 0}
+  hitChance: 90
 --- !u!50 &1068783177321823729
 Rigidbody2D:
   serializedVersion: 4
