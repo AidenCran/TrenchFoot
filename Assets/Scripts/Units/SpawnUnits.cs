@@ -2,28 +2,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
 namespace Units
 {
     public class SpawnUnits : MonoBehaviour
     {
+        // Further Refactor
+        // Two Spawners | One For Each Side
+        // Spawner Is The Side's Parent | Makes Below Transform Useless
         [SerializeField] Transform allyParent;
         [SerializeField] Transform enemyParent;
 
+        // Each Spawner Contains Opposition LayerMask
+        // Means Only 1 Mask Required
         [SerializeField] LayerMask allyMask;
         [SerializeField] LayerMask enemyMask;
 
+        // Spawn Height Stays
         [SerializeField] float spawnHeight = 3;
 
-        ScoreManager _scoreManager;
-
         // TODO: Change To UI Script
+        // UI Extracted To UI Script
         [SerializeField] Button buyRiflemanButton;
-        
-        readonly Dictionary<UnitType, IUnit> _unitDict = new();
-        
+
         readonly WaitForSeconds _enemyAdditionalDelay = new(2);
+
+        readonly Dictionary<UnitType, IUnit> _unitDict = new();
+
+        bool _canAllySpawn = true;
+
+        // Score Manager Stays
+        ScoreManager _scoreManager;
 
         void Start()
         {
@@ -38,37 +47,36 @@ namespace Units
                 if (!_canAllySpawn) return;
                 if (_scoreManager.Score < x.Cost()) return;
 
-                SpawnAlly(_unitDict[UnitType.Rifleman]);
+                SpawnUnit(_unitDict[UnitType.Rifleman], true);
                 _scoreManager.ReduceScore(x.Cost());
             });
 
-            SpawnAlly(_unitDict[UnitType.Rifleman]);
+            SpawnUnit(_unitDict[UnitType.Rifleman], true);
             AutoSpawnEnemies(_unitDict[UnitType.Rifleman]);
-        }
-
-        void AutoSpawnEnemies(IUnit unit)
-        {
-            StartCoroutine(SpawnEnemies(unit));
-
-            IEnumerator SpawnEnemies(IUnit unit1)
-            {
-                yield return unit.SpawnDelay();
-                yield return _enemyAdditionalDelay;
-
-                SpawnEnemy(unit);
-
-                // Repeat (Could Change To While Loop)
-                StartCoroutine(SpawnEnemies(unit));
-            }
         }
 
         float GetSpawnPointVariation()
         {
-            return Random.Range(-spawnHeight, spawnHeight);
+            return Random.Range(-spawnHeight / 2, spawnHeight / 2);
         }
 
-        bool _canAllySpawn = true;
+        void AutoSpawnEnemies(IUnit unit)
+        {
+            StartCoroutine(AutoSpawn());
 
+            IEnumerator AutoSpawn()
+            {
+                yield return unit.SpawnDelay();
+                yield return _enemyAdditionalDelay;
+
+                SpawnUnit(unit, false);
+
+                // Repeat (Could Change To While Loop)
+                StartCoroutine(AutoSpawn());
+            }
+        }
+
+        // TODO: Change From Unit Spawn Delay To Static 0.5s?
         void StartAllySpawnDelay(IUnit unit)
         {
             _canAllySpawn = false;
@@ -81,41 +89,33 @@ namespace Units
             }
         }
 
-        void SpawnAlly(IUnit unit)
+        void SpawnUnit(IUnit unit, bool isAlly)
         {
-            if (!_canAllySpawn) return;
-            var x = Instantiate(unit.Prefab(true), null);
+            var x = Instantiate(unit.Prefab(isAlly), null);
 
-            var spawnPosition = allyParent.position;
+            // If Ally => Ally Parent
+            var spawnPosition = isAlly ? allyParent.position : enemyParent.position;
             spawnPosition.y += GetSpawnPointVariation();
 
             x.spawnPoint = spawnPosition;
-            x.oppositionLayerMask = enemyMask;
-            x.isMovingLeft = false;
 
-            StartAllySpawnDelay(unit);
+            // If Ally => Enemy Mask is Opposition
+            x.oppositionLayerMask = isAlly ? enemyMask : allyMask;
+
+            // If Ally => Moving Right
+            x.isMovingLeft = !isAlly;
+
+            if (isAlly) StartAllySpawnDelay(unit);
         }
-
-        void SpawnEnemy(IUnit unit)
-        {
-            var x = Instantiate(unit.Prefab(false), null);
-
-            var spawnPosition = enemyParent.position;
-            spawnPosition.y += GetSpawnPointVariation();
-
-            x.spawnPoint = spawnPosition;
-            x.oppositionLayerMask = allyMask;
-            x.isMovingLeft = true;
-        }
-
-
+        
         void OnDrawGizmosSelected()
         {
-            var bot = transform.position;
-            bot.y -= spawnHeight;
+            var thisTransform = transform;
+            var bot = thisTransform.position;
+            bot.y -= spawnHeight / 2;
 
-            var top = transform.position;
-            top.y += spawnHeight;
+            var top = thisTransform.position;
+            top.y += spawnHeight / 2;
 
             Gizmos.DrawLine(bot, top);
         }

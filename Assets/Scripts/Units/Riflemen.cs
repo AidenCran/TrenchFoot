@@ -4,6 +4,19 @@ namespace Units
 {
     public class Riflemen : UnitAbstract
     {
+        protected override void Start()
+        {
+            base.Start();
+            
+            _stats = new TempEntityStats
+            {
+                MaxHealth = 10,
+                CurrentHealth = 15,
+                MoveSpeed = 3,
+                Damage = 5,
+                Range = 3f,
+            };
+        }
     }
 
     /// Unit Data Record 

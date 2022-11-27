@@ -6,7 +6,7 @@ namespace Units
 {
     public abstract class UnitAbstract : MonoBehaviour, IDamageable
     {
-        TempEntityStats _stats;
+        protected TempEntityStats _stats;
         
         // TODO: Hit Chance = Lower It In Trench
         
