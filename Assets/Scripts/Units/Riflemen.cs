@@ -8,7 +8,7 @@ namespace Units
         {
             base.Start();
             
-            _stats = new TempEntityStats
+            Stats = new TempEntityStats
             {
                 MaxHealth = 10,
                 CurrentHealth = 15,
@@ -19,7 +19,7 @@ namespace Units
         }
     }
 
-    /// Unit Data Record 
+    /// Unit Data Record
     public record RiflemenRecord : IUnit
     {
         readonly int _cost = 10;

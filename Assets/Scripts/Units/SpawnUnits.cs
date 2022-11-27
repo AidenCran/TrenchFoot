@@ -84,7 +84,7 @@ namespace Units
 
             IEnumerator AllySpawnDelay()
             {
-                yield return unit.SpawnDelay();
+                yield return Helper.GetWait(0.5f);
                 _canAllySpawn = true;
             }
         }
@@ -103,20 +103,20 @@ namespace Units
             x.oppositionLayerMask = isAlly ? enemyMask : allyMask;
 
             // If Ally => Moving Right
-            x.isMovingLeft = !isAlly;
+            x.isAlly = isAlly;
 
             if (isAlly) StartAllySpawnDelay(unit);
         }
         
         void OnDrawGizmosSelected()
         {
-            var thisTransform = transform;
-            var bot = thisTransform.position;
+            var position = transform.position;
+            var bot = position;
             bot.y -= spawnHeight / 2;
-
-            var top = thisTransform.position;
+            
+            var top = position;
             top.y += spawnHeight / 2;
-
+            
             Gizmos.DrawLine(bot, top);
         }
     }

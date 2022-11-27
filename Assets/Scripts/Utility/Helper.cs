@@ -20,4 +20,14 @@ public static class Helper
         RectTransformUtility.ScreenPointToWorldPointInRectangle(element, element.position, Camera, out var result);
         return result;
     }
+
+    static readonly Dictionary<float, WaitForSeconds> WaitDictionary = new();
+
+    public static WaitForSeconds GetWait(float time)
+    {
+        if (WaitDictionary.TryGetValue(time, out var wait)) return wait;
+
+        WaitDictionary[time] = new WaitForSeconds(time);
+        return WaitDictionary[time];
+    }
 }

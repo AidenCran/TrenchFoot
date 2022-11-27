@@ -1,55 +1,110 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using DefaultNamespace;
+using DG.Tweening;
+using Unity.VisualScripting;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Units
 {
     public abstract class UnitAbstract : MonoBehaviour, IDamageable
     {
-        protected TempEntityStats _stats;
+        protected TempEntityStats Stats;
         
         // TODO: Hit Chance = Lower It In Trench
         
         public Vector3 spawnPoint;
         public LayerMask oppositionLayerMask;
-
-        public bool isMovingLeft;
+        
+        public bool isAlly;
+        public bool isInTrench;
+        public bool isAttackingTrench;
 
         Rigidbody2D _rb;
 
         bool _isCooldownActive;
+        const float ReloadDelay = 0.5f;
+
+        public bool IsDead => Stats.IsDead;
+
+        public UnitStates state = UnitStates.Walking;
         
-        readonly WaitForSeconds _reloadDelay = new(0.5f);
+        [SerializeField] Animator animator;
+
+        readonly int _shoot = Animator.StringToHash("ShootSolo");
+        readonly int _climbUpProper = Animator.StringToHash("ClimbSolo");
+        readonly int _death = Animator.StringToHash("DeathSolo");
+        readonly int _drop = Animator.StringToHash("DropSolo");
+
+        Vector2 _unitAttackRange;
+
+        SpriteRenderer _spriteRenderer;
+
+        public SpriteRenderer GetRenderer => _spriteRenderer;
+
+        AudioSource _audioSource;
+
+        public float hitChance = 90;
+        
+        void Awake()
+        {
+            _audioSource = GetComponent<AudioSource>();
+            _rb = GetComponent<Rigidbody2D>();
+            animator = GetComponentInChildren<Animator>();
+            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+            state = UnitStates.Invincible;
+        }
 
         protected virtual void Start()
         {
-            _stats = new TempEntityStats
+            Stats = new TempEntityStats
             {
                 MaxHealth = 10,
-                CurrentHealth = 10,
-                MoveSpeed = 3,
+                CurrentHealth = 15,
+                MoveSpeed = 1.5f,
                 Damage = 5,
-                Range = 3f,
+                Range = 5f,
             };
-            
+
+            if (animator == null) print("Animator Null");
+
+            _unitAttackRange = new Vector2(Stats.Range, 10);
             transform.position = spawnPoint;
-            _rb = GetComponent<Rigidbody2D>();
+
+            StartCoroutine(IFrames());
+            IEnumerator IFrames()
+            {
+                yield return Helper.GetWait(5f);
+                state = UnitStates.Walking;
+            }
         }
 
         void Update() => MoveUnit();
 
+        bool CanWalk()
+        {
+            if (state == UnitStates.Dead) return false;
+            if (IsEnemyInRange()) return false;
+            if (isInTrench) return false;
+
+            return true;
+        }
+
         void MoveUnit()
         {
-            if (IsEnemyInRange())
+            if (!CanWalk())
             {
                 _rb.velocity = Vector2.zero;
                 return;
             }
 
-            var direction = isMovingLeft ? Vector2.left : Vector2.right;
+            var direction = isAlly ? Vector2.right : Vector2.left;
 
             // Else Move Forward
-            _rb.velocity = new Vector2(direction.x * _stats.MoveSpeed, 0);
+            _rb.velocity = new Vector2(direction.x * Stats.MoveSpeed, 0);
         }
 
         bool IsEnemyInRange()
@@ -61,10 +116,10 @@ namespace Units
             if (!x.Item2) return false;
 
             // Await To Shoot
-            if (_isCooldownActive) return true;
-        
+            if (_isCooldownActive || x.Item1.state == UnitStates.Invincible) return true;
+            
             // Shoot
-            Shoot(x.Item1);
+            ShootUnit(x.Item1);
             return true;
         }
 
@@ -74,33 +129,64 @@ namespace Units
         /// <returns></returns>
         (UnitAbstract, bool) UnitInRange()
         {
-            var size = new Vector2(1.25f, _stats.Range);
-            var x = Physics2D.OverlapBox(transform.position, size, 0, oppositionLayerMask);
+            var x = Physics2D.OverlapBox(transform.position, _unitAttackRange, 0, oppositionLayerMask);
             if (x == null) return (null, false);
             
             x.TryGetComponent<UnitAbstract>(out var unit);
+            if (unit.state == UnitStates.Dead) return (null, false);
+            
             return (unit, true);
         }
 
         public void TakeDamage(float damage)
         {
+            var x = UnityEngine.Random.Range(0, 100);
+            if (x > hitChance)
+            {
+                // Miss
+                // Play Sound??
+                return;
+            }
+            
+            // Else
+            
             // Damage Entity
             // Return Is Dead
             // If Is Dead = Kill Unit
-            if (_stats.DamageEntity(damage)) KillUnit();
+            if (Stats.DamageEntity(damage)) KillUnit();
         }
 
         void KillUnit()
         {
-            // Temp
-            gameObject.SetActive(false);
+            if (state == UnitStates.Invincible) return;
+            
+            state = UnitStates.Dead;
+            animator.CrossFade(_death, 0, 0);
+            
+            _audioSource.clip = UnitSounds.DieSound;
+            _audioSource.Play();
+
+            StartCoroutine(Wait());
+            IEnumerator Wait()
+            {
+                yield return Helper.GetWait(5);
+                ReleaseUnit();
+            }
         }
 
-        void Shoot(UnitAbstract unit)
+        void ShootUnit(UnitAbstract unit)
         {
             // Shoot
-            unit.TakeDamage(_stats.Damage);
-        
+            state = UnitStates.Attacking;
+            unit.TakeDamage(Stats.Damage);
+
+            // Play Animation
+            animator.CrossFade(_shoot, 0, 0);
+            
+            // Play Sound
+            _audioSource.clip = UnitSounds.ShootSound;
+            _audioSource.Play();
+            
             // Reload
             Reload();
         }
@@ -108,14 +194,25 @@ namespace Units
         void Reload()
         {
             _isCooldownActive = true;
-            StartCoroutine(Reload());
-            IEnumerator Reload()
+            StartCoroutine(LocalReload());
+            IEnumerator LocalReload()
             {
-                yield return _reloadDelay;
+                yield return Helper.GetWait(ReloadDelay);
                 _isCooldownActive = false;
             }
         }
 
-        void OnDrawGizmosSelected() => Gizmos.DrawWireSphere(transform.position, _stats.Range);
+        public void ReleaseUnit()
+        {
+            _spriteRenderer.DOFade(0, 2).OnComplete(() =>
+            {
+                gameObject.SetActive(false);
+            });
+        }
+
+        public void EnterTrenchAnim() => animator.CrossFade(_drop, 0, 0);
+        public void ExitTrenchAnim() => animator.CrossFade(_climbUpProper, 0, 0);
+
+        void OnDrawGizmosSelected() => Gizmos.DrawWireCube(transform.position, _unitAttackRange);
     }
 }

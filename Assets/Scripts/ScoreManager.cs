@@ -29,7 +29,7 @@ public class ScoreManager : MonoBehaviour
     
     void Awake() => Singleton();
 
-    [SerializeField] int _timeScoreIncrement = 5;
+    [SerializeField] int _timeScoreIncrement = 20;
     [SerializeField] float delay = 2.5f;
 
     WaitForSeconds _delay;
