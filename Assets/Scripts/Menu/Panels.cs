@@ -8,6 +8,8 @@ public class Panels : MonoBehaviour
     public GameObject MenuPanel;
     public GameObject TutorialPanel;
     public GameObject SystemPanel;
+    public GameObject WinLosePanel;
+
 
     public void StartTutorial()
     {
@@ -31,6 +33,18 @@ public class Panels : MonoBehaviour
     {
         TutorialPanel.SetActive(true);
         SystemPanel.SetActive(false);
+    }
+
+    public void StartWinLose()
+    {
+        SystemPanel.SetActive(false);
+        WinLosePanel.SetActive(true);
+    }
+
+    public void ExitWinLose()
+    {
+        SystemPanel.SetActive(true);
+        WinLosePanel.SetActive(false);
     }
 
 
