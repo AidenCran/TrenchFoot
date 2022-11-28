@@ -37,12 +37,15 @@ public class GameHandler : MonoBehaviour
 
     [SerializeField] AudioClip WinClip;
     [SerializeField] AudioClip LoseClip;
+
+    AudioSource _audio;
     
     public bool IsGameOver { get; private set; }
 
     void Start()
     {
         SoundManager.instance.PlayLevelMusic();
+        _audio = GetComponent<AudioSource>();
     }
 
     public void WinGame() => DisplayResult(true);
@@ -57,6 +60,6 @@ public class GameHandler : MonoBehaviour
         _resultTitle.text = isWin ? "GAME WON" : "GAME LOST";
         
         var clip = isWin ? WinClip : LoseClip;
-        SoundManager.instance.PlayMusic(clip);
+        _audio.PlayOneShot(clip, 0.5f);
     }
 }

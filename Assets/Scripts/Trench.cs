@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DefaultNamespace;
 using DG.Tweening;
+using TMPro;
 using Units;
 using UnityEngine;
 using UnityEngine.Events;
@@ -32,6 +33,7 @@ public class Trench : MonoBehaviour
     [SerializeField] List<UnitAbstract> awaitingToEnterTrench = new();
 
     [SerializeField] Button chargeButton;
+    [SerializeField] TMP_Text unitCount;
     
     bool _purgeCooldownActive;
 
@@ -45,6 +47,7 @@ public class Trench : MonoBehaviour
     void Update()
     {
         CheckIfTrenchIsEmpty();
+        unitCount.text = $"{unitsInTrench.Count}/{MaxTrenchUnitCount-1}";
     }
 
     void OnTriggerEnter2D(Collider2D col)
