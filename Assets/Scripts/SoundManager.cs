@@ -30,7 +30,11 @@ public class SoundManager : MonoBehaviour
     [SerializeField] AudioSource soundSource;
 
     [SerializeField] AudioClip defaultMusic;
-
+    
+    [SerializeField] List<AudioClip> menuMusic;
+    [SerializeField] List<AudioClip> levelMusic;
+    
+    
     float _musicMaxVolume;
     float _setVolume;
 
@@ -99,6 +103,9 @@ public class SoundManager : MonoBehaviour
         if (randomBackgroundSounds.Count == 0) return;
         PlaySound(randomBackgroundSounds.SelectRandom());
     }
+
+    public void PlayMenuMusic() => PlayMusic(menuMusic.SelectRandom());
+    public void PlayLevelMusic() => PlayMusic(levelMusic.SelectRandom());
 
     public void PlayDefaultMusic() => PlayMusic(defaultMusic);
 }

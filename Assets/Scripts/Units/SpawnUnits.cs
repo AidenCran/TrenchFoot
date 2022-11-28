@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace Units
 {
@@ -34,13 +36,28 @@ namespace Units
         // Score Manager Stays
         ScoreManager _scoreManager;
 
-        UnitManager _unitManager;
+        PauseMenu _pauseMenu;
 
+        bool _readyToSpawnEnemy;
+        bool _readyToSpawnAlly;
+        
         void Start()
         {
+            _pauseMenu = PauseMenu.instance;
+            _pauseMenu.OnPauseEvent.AddListener((isPaused) =>
+            {
+                if (!isPaused)
+                {
+                    _canAllySpawn = true;
+                    AutoSpawnEnemies(_unitDict[UnitType.Rifleman]);
+                }
+            });
+            
+            SoundManager _soundManager = SoundManager.instance;
+            _soundManager.PlayLevelMusic();
+            
             _unitDict.Add(UnitType.Rifleman, new RiflemenRecord());
 
-            _unitManager = UnitManager.Instance;
             _scoreManager = ScoreManager.instance;
             ;
             buyRiflemanButton.onClick.AddListener(() =>
@@ -56,6 +73,20 @@ namespace Units
 
             SpawnUnit(_unitDict[UnitType.Rifleman], true);
             AutoSpawnEnemies(_unitDict[UnitType.Rifleman]);
+        }
+
+        void Update()
+        {
+            if (_pauseMenu.IsPaused) return;
+            
+            // TEMP FOR GAME JAM :)
+            if (!_canAllySpawn)
+            {
+                buyRiflemanButton.interactable = false;
+                return;
+            }
+
+            buyRiflemanButton.interactable = _scoreManager.Score >= _unitDict[UnitType.Rifleman].Cost();
         }
 
         float GetSpawnPointVariation()
@@ -75,6 +106,12 @@ namespace Units
                 SpawnUnit(unit, false);
 
                 // Repeat (Could Change To While Loop)
+                if (_pauseMenu.IsPaused)
+                {
+                    _readyToSpawnEnemy = true;
+                    yield break;
+                }
+                
                 StartCoroutine(AutoSpawn());
             }
         }
@@ -94,14 +131,15 @@ namespace Units
 
         void SpawnUnit(IUnit unit, bool isAlly)
         {
-            var x = isAlly ? _unitManager.GetAllyUnit() : _unitManager.GetEnemyUnit();
-            // var x = Instantiate(unit.Prefab(isAlly), null);
+            // var x = isAlly ? _unitManager.GetAllyUnit() : _unitManager.GetEnemyUnit();
+            var x = Instantiate(unit.Prefab(isAlly), null);
 
             // If Ally => Ally Parent
             var spawnPosition = isAlly ? allyParent.position : enemyParent.position;
             spawnPosition.y += GetSpawnPointVariation();
 
             x.spawnPoint = spawnPosition;
+            x.transform.position = spawnPosition;
 
             // If Ally => Enemy Mask is Opposition
             x.oppositionLayerMask = isAlly ? enemyMask : allyMask;
@@ -111,18 +149,8 @@ namespace Units
 
             if (isAlly) StartAllySpawnDelay(unit);
 
-            x.OnRelease = () =>
-            {
-                switch (x.isAlly)
-                {
-                    case true:
-                        _unitManager.ReleaseAllyUnit(x);
-                        break;
-                    case false:
-                        _unitManager.ReleaseEnemyUnit(x);
-                        break;
-                }
-            };
+
+            x.OnRelease = ()=> Destroy(x.gameObject);
         }
         
         void OnDrawGizmosSelected()

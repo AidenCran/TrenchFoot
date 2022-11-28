@@ -22,14 +22,7 @@ public class FadeUI : MonoBehaviour
     {
         _canvasGroup = GetComponent<CanvasGroup>();
 
-        if (_isDisplayed)
-        { 
-            ShowUI(); 
-        }
-        else 
-        { 
-            HideUI(); 
-        }
+        SetCanvasFade(_isDisplayed);
     }
 
     public void ShowUI()
@@ -69,7 +62,20 @@ public class FadeUI : MonoBehaviour
         _canvasGroup.blocksRaycasts = false;
         _canvasGroup.interactable = false;
     }
+    
+    void FadeCanvas(float value) => _canvasGroup.DOFade(value, _duration);
+    void FadeCanvas(float value, float duration) => _canvasGroup.DOFade(value, duration);
 
-   void FadeCanvas(float value) => _canvasGroup.DOFade(value, _duration);
-   void FadeCanvas(float value, float duration) => _canvasGroup.DOFade(value, duration);
+    public void SetCanvasFade(bool enabled)
+    {
+        if (enabled) ShowUI();
+        else HideUI();
+    }
+    
+    public void InvertedSetCanvasFade(bool enabled)
+    {
+        bool b = !enabled;
+        if (b) ShowUI();
+        else HideUI();
+    }
 }

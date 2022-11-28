@@ -35,9 +35,31 @@ public class ScoreManager : MonoBehaviour
     WaitForSeconds _delay;
 
     [SerializeField] TMP_Text scoreText;
+
+    PauseMenu _pauseMenu;
+
+    AudioSource _source;
+    AudioClip _addScore;
+    AudioClip _reduceScore;
     
     void Start()
     {
+        _pauseMenu = PauseMenu.instance;
+
+        if (!TryGetComponent(out _source))
+        {
+            _source = gameObject.AddComponent<AudioSource>();
+        }
+        
+        _addScore = Resources.Load<AudioClip>("SFX/SFX Points UP");
+        _reduceScore = Resources.Load<AudioClip>("SFX/SFX Points DOWN");
+        
+        _pauseMenu.OnPauseEvent.AddListener((isPaused) =>
+        {
+            // If Unpaused
+            if (!isPaused) StartAddingScorePerSecond();
+        });
+        
         _delay = new(delay);
         DisplayScore();
         StartAddingScorePerSecond();
@@ -47,13 +69,17 @@ public class ScoreManager : MonoBehaviour
     {
         Score += score;
         DisplayScore();
+        _source.PlayOneShot(_addScore);
     }
 
     public void ReduceScore(int score)
     {
         Score -= score;
         DisplayScore();
+        _source.PlayOneShot(_reduceScore);
     }
+
+    bool isReadyToAddScore;
 
     void StartAddingScorePerSecond()
     {
@@ -61,6 +87,11 @@ public class ScoreManager : MonoBehaviour
         IEnumerator AddScoreOverTime()
         {
             yield return _delay;
+            if (_pauseMenu.IsPaused)
+            {
+                isReadyToAddScore = true;
+                yield break;
+            }
             AddScore(timeScoreIncrement);
             StartAddingScorePerSecond();
         }

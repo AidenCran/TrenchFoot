@@ -2,17 +2,14 @@ namespace Units
 {
     public struct TempEntityStats
     {
-        public TempEntityStats(float maxHP, float moveSpeed, float damage, float range)
+        public TempEntityStats(float moveSpeed, float damage, float range, float currentHealth)
         {
-            MaxHealth = maxHP;
+            CurrentHealth = currentHealth;
             MoveSpeed = moveSpeed;
             Damage = damage;
             Range = range;
-
-            CurrentHealth = MaxHealth;
         }
 
-        public float MaxHealth;
         public float CurrentHealth;
         public float MoveSpeed;
         public float Damage;

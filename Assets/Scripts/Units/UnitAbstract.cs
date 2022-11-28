@@ -30,10 +30,11 @@ namespace Units
 
         bool _isCooldownActive;
         const float ReloadDelay = 0.5f;
+        public float hitChance = 75;
 
-        public bool IsDead => Stats.IsDead;
 
         public UnitStates state = UnitStates.Walking;
+        public bool IsDead => state == UnitStates.Dead;
         
         [SerializeField] Animator animator;
 
@@ -49,49 +50,42 @@ namespace Units
 
         AudioSource _audioSource;
 
-        public float hitChance = 90;
-        
+        PauseMenu _pauseMenu;
+
         void Awake()
         {
             _audioSource = GetComponent<AudioSource>();
             _rb = GetComponent<Rigidbody2D>();
             animator = GetComponentInChildren<Animator>();
             GetRenderer = GetComponentInChildren<SpriteRenderer>();
-
-            Init();
-        }
-
-        protected virtual void Start()
-        {
-            Init();
-            if (animator == null) print("Animator Null");
-        }
-
-        public void Init()
-        {
-            state = UnitStates.Invincible;
             
             Stats = new TempEntityStats
             {
-                MaxHealth = 10,
                 CurrentHealth = 15,
-                MoveSpeed = 1.5f,
+                MoveSpeed = .75f,
                 Damage = 5,
                 Range = 5f,
             };
             
-            _unitAttackRange = new Vector2(Stats.Range, 10);
-            transform.position = spawnPoint;
+            state = UnitStates.Walking;
 
+            isInTrench = false;
+            isAttackingTrench = false;
+
+            _unitAttackRange = new Vector2(Stats.Range, 10);
+        }
+
+        protected virtual void Start()
+        {
+            _pauseMenu = PauseMenu.instance;
+            
+            Init();
+        }
+
+        void Init()
+        {
             animator.CrossFade(_idle, 0, 0);
             GetRenderer.DOFade(1, 0);
-            
-            StartCoroutine(IFrames());
-            IEnumerator IFrames()
-            {
-                yield return Helper.GetWait(5f);
-                state = UnitStates.Walking;
-            }
         }
 
         void Update() => MoveUnit();
@@ -100,13 +94,28 @@ namespace Units
         {
             if (state == UnitStates.Dead) return false;
             if (IsEnemyInRange()) return false;
+
+            if (state == UnitStates.InTrench) return false;
+            if (isAttackingTrench) return false;
             if (isInTrench) return false;
+
+            if (state == UnitStates.Invincible) return true;
 
             return true;
         }
 
+        /// <summary>
+        /// Move Unit Horizontally
+        /// </summary>
         void MoveUnit()
         {
+            // Prevent Walk & Attack Check / Attack
+            if (_pauseMenu.IsPaused)
+            {
+                _rb.velocity = Vector2.zero;
+                return;
+            }
+            
             if (!CanWalk())
             {
                 _rb.velocity = Vector2.zero;
@@ -115,14 +124,21 @@ namespace Units
             
             animator.CrossFade(_idle, 0, 0);
 
+            // Select Direction
             var direction = isAlly ? Vector2.right : Vector2.left;
-
-            // Else Move Forward
+            
+            // Set Velocity
             _rb.velocity = new Vector2(direction.x * Stats.MoveSpeed, 0);
         }
 
+        /// <summary>
+        /// Checking if enemies are in range
+        /// </summary>
+        /// <returns></returns>
         bool IsEnemyInRange()
         {
+            if (state == UnitStates.Dead) return false;
+            
             // Get Unit
             var x = UnitInRange();
         
@@ -137,16 +153,28 @@ namespace Units
             return true;
         }
 
+        Vector2 AttackPoint()
+        {
+            var pos = transform.position;
+            var offset = _unitAttackRange.x / 3;
+            var result = isAlly ? pos.x += offset : pos.x -= offset;
+            pos.x = result;
+            return pos;
+        }
+
         /// <summary>
+        /// Raycast In-front of Unit (Square)
         /// Return Nullable Unit & Bool if null
         /// </summary>
         /// <returns></returns>
         (UnitAbstract, bool) UnitInRange()
         {
-            var x = Physics2D.OverlapBox(transform.position, _unitAttackRange, 0, oppositionLayerMask);
+            var x = Physics2D.OverlapBox(AttackPoint(), _unitAttackRange, 0, oppositionLayerMask);
             if (x == null) return (null, false);
             
             x.TryGetComponent<UnitAbstract>(out var unit);
+            if (unit.isAlly == isAlly) return (null, false);
+            // If Unit Is Dead | Return False
             return unit.state == UnitStates.Dead ? (null, false) : (unit, true);
         }
 
@@ -156,12 +184,11 @@ namespace Units
             if (x > hitChance)
             {
                 // Miss
-                // Play Sound??
+                // Play Sound
+                PlaySound(UnitSounds.MissedShot);
                 return;
             }
-            
-            // Else
-            
+
             // Damage Entity
             // Return Is Dead
             // If Is Dead = Kill Unit
@@ -170,7 +197,8 @@ namespace Units
 
         void KillUnit()
         {
-            if (state == UnitStates.Invincible) return;
+            // If Already Dead
+            if (state == UnitStates.Dead) return;
             
             state = UnitStates.Dead;
             animator.CrossFade(_death, 0, 0);
@@ -178,6 +206,8 @@ namespace Units
             PlaySound(UnitSounds.DieSound);
 
             OnDeath?.Invoke(this);
+            
+            print("I Died");
             
             StartCoroutine(Wait());
             IEnumerator Wait()
@@ -190,6 +220,8 @@ namespace Units
         void ShootUnit(UnitAbstract unit)
         {
             if (state == UnitStates.Dead) return;
+
+            if (unit.state == UnitStates.Dead) return;
             
             // Shoot
             state = UnitStates.Attacking;
@@ -216,23 +248,22 @@ namespace Units
             }
         }
 
-        public void ReleaseUnit()
+        public void ReleaseUnit() => GetRenderer.DOFade(0, 2).OnComplete(() => Destroy(gameObject));
+
+        void PlaySound(AudioClip clip) => _audioSource.PlayOneShot(clip);
+
+        public void EnterTrenchAnim()
         {
-            GetRenderer.DOFade(0, 2).OnComplete(() =>
-            {
-                OnRelease?.Invoke();
-            });
-        }
-        
-        void PlaySound(AudioClip clip)
-        {
-            _audioSource.clip = clip;
-            _audioSource.Play();
+            state = UnitStates.InTrench;
+            animator.CrossFade(_drop, 0, 0);
         }
 
-        public void EnterTrenchAnim() => animator.CrossFade(_drop, 0, 0);
-        public void ExitTrenchAnim() => animator.CrossFade(_climbUpProper, 0, 0);
+        public void ExitTrenchAnim()
+        {
+            animator.CrossFade(_climbUpProper, 0, 0);
+            state = UnitStates.Walking;
+        }
 
-        void OnDrawGizmosSelected() => Gizmos.DrawWireCube(transform.position, _unitAttackRange);
+        void OnDrawGizmosSelected() => Gizmos.DrawWireCube(AttackPoint(), _unitAttackRange);
     }
 }

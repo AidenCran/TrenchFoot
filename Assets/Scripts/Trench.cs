@@ -7,13 +7,14 @@ using DG.Tweening;
 using Units;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using Utility;
 
 [RequireComponent(typeof(BoxCollider2D))]
 public class Trench : MonoBehaviour
 {
     // TODO: Units Enter Exit Trench
-    readonly List<UnitAbstract> _unitsInTrench = new();
+    [SerializeField] List<UnitAbstract> _unitsInTrench = new();
 
     const int MaxTrenchUnitCount = 6;
     const float Delay = .25f;
@@ -26,13 +27,22 @@ public class Trench : MonoBehaviour
     
     const float Duration = 0.5f;
 
-    bool IsTrenchEmpty => _countInTrench == 0;
+    [SerializeField] bool IsTrenchEmpty => _countInTrench == 0;
 
-    const float _trenchHitReduction = 20f;
+    const float _trenchHitReduction = 15f;
 
-    readonly List<UnitAbstract> _awaitingToEnterTrench = new();
+    [SerializeField] List<UnitAbstract> _awaitingToEnterTrench = new();
 
-    void Start() => _helperMonoBehaviour = HelperMonoBehaviour.Instance;
+    [SerializeField] Button _chargeButton;
+    
+    bool _purgeCooldownActive;
+
+    void Start()
+    {
+        _helperMonoBehaviour = HelperMonoBehaviour.Instance;
+        _chargeButton.interactable = isAllyTrench;
+        _chargeButton.onClick.AddListener(Purge);
+    }
 
     void OnTriggerEnter2D(Collider2D col)
     {
@@ -52,19 +62,18 @@ public class Trench : MonoBehaviour
         if (unit.isAlly != _unitsInTrench[0].isAlly)
         {
             // Await Entering Trench
-            unit.isInTrench = true;
+            unit.isAttackingTrench = true;
             _awaitingToEnterTrench.Add(unit);
             return;
         }
-        
-        EnterTrench(unit);
     }
-
-    // PROBLEMS
-    // Enemies not staying in trench after it filled???!?
 
     void EnterTrench(UnitAbstract unit)
     {
+        if (_unitsInTrench.Contains(unit)) return;
+
+        _unitsInTrench = _unitsInTrench.Where((x) => x != null).ToList();
+        
         _unitsInTrench.Add(unit);
         _countInTrench++;
         
@@ -72,7 +81,11 @@ public class Trench : MonoBehaviour
         unit.hitChance -= _trenchHitReduction;
 
         unit.OnDeath?.AddListener(RemoveUnit);
-        
+
+        isAllyTrench = unit.isAlly;
+
+        SetPurgeAccess();
+
         // Play Enter Anim
         unit.EnterTrenchAnim();
         SetUnitLayers();
@@ -93,19 +106,25 @@ public class Trench : MonoBehaviour
         if (_unitsInTrench.Count != 0) return;
         if (_awaitingToEnterTrench.Count <= 0) return;
         
-        foreach (var unit in _awaitingToEnterTrench) EnterTrench(unit);
+        _unitsInTrench.Clear();
+        
+        isAllyTrench = _awaitingToEnterTrench[0].isAlly;
+        _chargeButton.interactable = isAllyTrench;
+        
+        foreach (var unit in _awaitingToEnterTrench)
+        {
+            unit.isAttackingTrench = false;
+            EnterTrench(unit);
+        }
     }
 
+    // BUG: Units Aren't Always Removed From List But Play As Normal...
     void ExitTrench(UnitAbstract unit)
     {
         RemoveUnit(unit);
-        
-        unit.OnDeath?.RemoveListener(RemoveUnit);
-        CheckIfTrenchIsEmpty();
-        
+
         if (unit.state == UnitStates.Dead) return;
-        
-        
+
         // Tween Unit Out Of Trench
         var newPos = unit.transform.position;
         newPos.x += unit.isAlly ? 1f : -1f;
@@ -126,31 +145,58 @@ public class Trench : MonoBehaviour
     void RemoveUnit(UnitAbstract unit)
     {
         _unitsInTrench.Remove(unit);
+        unit.OnDeath?.RemoveListener(RemoveUnit);
         _countInTrench--;
+        CheckIfTrenchIsEmpty();
     }
 
+    // Sprite Layering
     void SetUnitLayers()
     {
-        var arr = _unitsInTrench.OrderBy((x) => x.transform.position.y).Reverse().ToArray();
+        var arr = _unitsInTrench.Where((x) => x != null && !x.IsDead).OrderBy((x) => x.transform.position.y).Reverse().ToArray();
         for (var i = 0; i < arr.Length; i++)
         {
             arr[i].GetRenderer.sortingOrder = 100 + i;
         }
     }
-
-    // TODO: Purge (All Units Charge Out Of Trench)
+    
+    // All Units Charge Out Of Trench
     void Purge()
     {
-        foreach (var unit in _unitsInTrench)
+        if (_purgeCooldownActive) return;
+        if (_unitsInTrench == null) return;
+        if (_unitsInTrench.Count == 0) return;
+
+        PurgeCooldown();
+        
+        for (var i = 0; i < _unitsInTrench.Count; i++)
         {
-            unit.isInTrench = false;
+            var unit = _unitsInTrench[i];
+            if (unit == null) continue;
+            ExitTrench(unit);
         }
     }
-    
-    // TODO: Units Gain Cover?? % Hit Chance
-    
-    // TODO: Take Over Enemy Trenches?
 
-    // TODO: Able To Buy / Place Multiple Trenches (Cap At 3)
-    // OTHER FILE ^*
+    void PurgeCooldown()
+    {
+        StartCoroutine(Cooldown());
+        IEnumerator Cooldown()
+        {
+            _purgeCooldownActive = true;
+            _chargeButton.interactable = false;
+            yield return Helper.GetWait(5);
+            
+            _purgeCooldownActive = false;
+
+            SetPurgeAccess();
+        }
+    }
+
+    void SetPurgeAccess()
+    {
+        if (_purgeCooldownActive) return;
+        if (_unitsInTrench.Count == 0) return;
+        
+        _chargeButton.interactable = _unitsInTrench[0].isAlly;
+    }
 }

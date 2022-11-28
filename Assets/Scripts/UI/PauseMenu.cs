@@ -1,32 +1,59 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
-    [SerializeField] GameObject pauseMenu;
+    #region Singleton
+
+    public static PauseMenu instance { get; private set; }
+
+    private void Singleton()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
+
+    #endregion
+    
+    [SerializeField] FadeUI menuFade;
+
+    public UnityEvent<bool> OnPauseEvent = new UnityEvent<bool>();
+    
+    public bool IsPaused { get; private set; }
+
+    void Awake()
+    {
+        Singleton();
+    }
 
     public void Pause()
     {
-        pauseMenu.SetActive(true);
-        Time.timeScale = 0f;
+        IsPaused = true;
+        OnPauseEvent?.Invoke(IsPaused);
+        menuFade.ShowUI();
     }
 
     public void Resume()
     {
-        pauseMenu.SetActive(false);
-        Time.timeScale = 1f;
+        IsPaused = false;
+        OnPauseEvent?.Invoke(IsPaused);
+        menuFade.HideUI();
     }
 
     public void MainMenu(int sceneID)
     {
-        Time.timeScale = 1f;
+        Resume();
         SceneManager.LoadScene(sceneID);
-    }
-
-    public void QuitGame()
-    {
-        Application.Quit();
     }
 }

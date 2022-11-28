@@ -1,6 +1,8 @@
-﻿namespace Units
+﻿using UnityEngine;
+
+namespace Units
 {
-    public class UnitStateMachine
+    public class UnitStateMachine : MonoBehaviour
     {
         
     }

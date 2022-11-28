@@ -10,7 +10,6 @@ namespace Units
             
             Stats = new TempEntityStats
             {
-                MaxHealth = 10,
                 CurrentHealth = 15,
                 MoveSpeed = 3,
                 Damage = 5,
