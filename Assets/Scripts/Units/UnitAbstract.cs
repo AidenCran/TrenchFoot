@@ -26,6 +26,7 @@ namespace Units
         public bool isAlly;
         public bool isInTrench;
         public bool isAttackingTrench;
+        public bool trenchCooldown;
 
         Rigidbody2D _rb;
 
@@ -35,10 +36,10 @@ namespace Units
 
         public UnitStates state = UnitStates.Walking;
         public bool IsDead => state == UnitStates.Dead;
-        
+
         [SerializeField] Animator animator;
 
-        readonly int _idle = Animator.StringToHash("WalkSolo");
+        readonly int _walkAnim = Animator.StringToHash("WalkSolo");
         readonly int _shoot = Animator.StringToHash("ShootSolo");
         readonly int _climbUpProper = Animator.StringToHash("ClimbSolo");
         readonly int _death = Animator.StringToHash("DeathSolo");
@@ -60,8 +61,6 @@ namespace Units
             GetRenderer = GetComponentInChildren<SpriteRenderer>();
 
             Stats = new TempEntityStats(0.25f, 5, 5, 15);
-            
-            state = UnitStates.Walking;
 
             isInTrench = false;
             isAttackingTrench = false;
@@ -77,21 +76,29 @@ namespace Units
 
         void Init()
         {
-            animator.CrossFade(_idle, 0, 0);
+            SetAnimState(_walkAnim, UnitStates.Walking);
             GetRenderer.DOFade(1, 0);
         }
 
-        void Update() => MoveUnit();
+        void Update()
+        {
+            if (_pauseMenu.IsPaused)
+            {
+                _rb.velocity = Vector2.zero;
+                return;
+            }
+            
+            if (IsDead) return;
+            if (IsEnemyInRange()) return;
+            
+            MoveUnit();
+        }
 
         bool CanWalk()
         {
-            if (state == UnitStates.Dead) return false;
-            if (IsEnemyInRange()) return false;
-
             if (state == UnitStates.InTrench) return false;
             if (isAttackingTrench) return false;
             if (isInTrench) return false;
-
             return true;
         }
 
@@ -100,20 +107,13 @@ namespace Units
         /// </summary>
         void MoveUnit()
         {
-            // Prevent Walk & Attack Check / Attack
-            if (_pauseMenu.IsPaused)
-            {
-                _rb.velocity = Vector2.zero;
-                return;
-            }
-            
             if (!CanWalk())
             {
-                _rb.velocity = Vector2.zero;
+                StopMoving();
                 return;
             }
             
-            animator.CrossFade(_idle, 0, 0);
+            SetAnimState(_walkAnim, UnitStates.Walking);
 
             // Select Direction
             var direction = isAlly ? 1 : -1;
@@ -128,8 +128,6 @@ namespace Units
         /// <returns></returns>
         bool IsEnemyInRange()
         {
-            if (state == UnitStates.Dead) return false;
-            
             // Get Unit
             var x = UnitInRange();
         
@@ -144,29 +142,22 @@ namespace Units
             return true;
         }
 
-        Vector2 AttackPoint()
-        {
-            var pos = transform.position;
-            var offset = _unitAttackRange.x / 3;
-            var result = isAlly ? pos.x += offset : pos.x -= offset;
-            pos.x = result;
-            return pos;
-        }
-
-        /// <summary>
-        /// Raycast In-front of Unit (Square)
-        /// Return Nullable Unit & Bool if null
-        /// </summary>
-        /// <returns></returns>
+        [SerializeField] bool DebugAttack;
+        
         (UnitAbstract, bool) UnitInRange()
         {
-            var x = Physics2D.OverlapBox(transform.position, _unitAttackRange, 0, oppositionLayerMask);
-            if (x == null) return (null, false);
+            if (DebugAttack) print("Checking To Attack");
             
-            x.TryGetComponent<UnitAbstract>(out var unit);
-            if (unit.isAlly == isAlly) return (null, false);
-            // If Unit Is Dead | Return False
-            return unit.state == UnitStates.Dead ? (null, false) : (unit, true);
+            // Raycast For Unit
+            var x = Physics2D.OverlapBoxAll(transform.position, _unitAttackRange, 0, oppositionLayerMask);
+
+            // If Null
+            if (x == null) return (null, false);
+            if (x.Length == 0) return (null, false);
+            if (!x.SelectRandom().TryGetComponent<UnitAbstract>(out var unit)) return (null, false);
+            if (unit.isAlly == isAlly || unit.state == UnitStates.Dead) return (null, false);
+            
+            return (unit, true);
         }
 
         public void TakeDamage(float damage)
@@ -191,15 +182,13 @@ namespace Units
             // If Already Dead
             if (state == UnitStates.Dead) return;
             
-            state = UnitStates.Dead;
-            animator.CrossFade(_death, 0, 0);
-            
+            SetAnimState(_death, UnitStates.Dead);
+            StopMoving();
+
             PlaySound(UnitSounds.DieSound);
 
             OnDeath?.Invoke(this);
-            
-            print("I Died");
-            
+
             StartCoroutine(Wait());
             IEnumerator Wait()
             {
@@ -211,15 +200,14 @@ namespace Units
         void ShootUnit(UnitAbstract unit)
         {
             if (state == UnitStates.Dead) return;
-
             if (unit.state == UnitStates.Dead) return;
-            
+
             // Shoot
-            state = UnitStates.Attacking;
             unit.TakeDamage(Stats.Damage);
 
             // Play Animation
-            animator.CrossFade(_shoot, 0, 0);
+            SetAnimState(_shoot, UnitStates.Attacking);
+            StopMoving();
             
             // Play Sound
             PlaySound(UnitSounds.ShootSound);
@@ -239,22 +227,26 @@ namespace Units
             }
         }
 
+        void StopMoving() => _rb.velocity = Vector2.zero;
+
         public void ReleaseUnit() => GetRenderer.DOFade(0, 2).OnComplete(() => Destroy(gameObject));
 
         void PlaySound(AudioClip clip) => _audioSource.PlayOneShot(clip);
 
-        public void EnterTrenchAnim()
+        #region Anims
+
+        void SetAnimState(int animState, UnitStates state)
         {
-            state = UnitStates.InTrench;
-            animator.CrossFade(_drop, 0, 0);
+            animator.CrossFade(animState, 0, 0);
+            this.state = state;
         }
 
-        public void ExitTrenchAnim()
-        {
-            animator.CrossFade(_climbUpProper, 0, 0);
-            state = UnitStates.Walking;
-        }
+        public void EnterTrenchAnim() => SetAnimState(_drop, UnitStates.InTrench);
 
-        void OnDrawGizmosSelected() => Gizmos.DrawWireCube(AttackPoint(), _unitAttackRange);
+        public void ExitTrenchAnim() => SetAnimState(_climbUpProper, UnitStates.Walking);
+
+        #endregion 
+        
+        void OnDrawGizmos() => Gizmos.DrawWireCube(transform.position, _unitAttackRange);
     }
 }

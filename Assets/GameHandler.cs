@@ -35,6 +35,9 @@ public class GameHandler : MonoBehaviour
     [SerializeField] FadeUI _canvas;
     [SerializeField] TMP_Text _resultTitle;
 
+    [SerializeField] AudioClip WinClip;
+    [SerializeField] AudioClip LoseClip;
+    
     public bool IsGameOver { get; private set; }
 
     void Start()
@@ -52,5 +55,8 @@ public class GameHandler : MonoBehaviour
         IsGameOver = isWin;
         _canvas.ShowUI();
         _resultTitle.text = isWin ? "GAME WON" : "GAME LOST";
+        
+        var clip = isWin ? WinClip : LoseClip;
+        SoundManager.instance.PlayMusic(clip);
     }
 }

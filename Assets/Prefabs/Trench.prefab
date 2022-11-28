@@ -147,7 +147,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.5
+  m_Volume: 0.25
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -370,10 +370,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7db5dc8c0cb3c1b449635e6f42f5b64c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _unitsInTrench: []
+  unitsInTrench: []
   isAllyTrench: 1
-  _awaitingToEnterTrench: []
-  _chargeButton: {fileID: 4584675731653162082}
+  awaitingToEnterTrench: []
+  chargeButton: {fileID: 4584675731653162082}
 --- !u!1 &6835663184014235007
 GameObject:
   m_ObjectHideFlags: 0

@@ -27,10 +27,8 @@ public class ScoreManager : MonoBehaviour
 
     public int Score { get; private set; }
     
-    void Awake() => Singleton();
-
-    [SerializeField] int timeScoreIncrement = 20;
-    [SerializeField] float delay = 2.5f;
+    const int TimeScoreIncrement = 20;
+    const float Delay = 5f;
 
     WaitForSeconds _delay;
 
@@ -42,15 +40,18 @@ public class ScoreManager : MonoBehaviour
     AudioClip _addScore;
     AudioClip _reduceScore;
     
+#pragma warning disable CS0414
+    bool _isReadyToAddScore;
+#pragma warning restore CS0414
+
+    void Awake() => Singleton();
+    
     void Start()
     {
         _pauseMenu = PauseMenu.instance;
 
-        if (!TryGetComponent(out _source))
-        {
-            _source = gameObject.AddComponent<AudioSource>();
-        }
-        
+        if (!TryGetComponent(out _source)) _source = gameObject.AddComponent<AudioSource>();
+
         _addScore = Resources.Load<AudioClip>("SFX/SFX Points UP");
         _reduceScore = Resources.Load<AudioClip>("SFX/SFX Points DOWN");
         
@@ -60,7 +61,7 @@ public class ScoreManager : MonoBehaviour
             if (!isPaused) StartAddingScorePerSecond();
         });
         
-        _delay = new(delay);
+        _delay = new(Delay);
         DisplayScore();
         StartAddingScorePerSecond();
     }
@@ -79,8 +80,6 @@ public class ScoreManager : MonoBehaviour
         _source.PlayOneShot(_reduceScore);
     }
 
-    bool isReadyToAddScore;
-
     void StartAddingScorePerSecond()
     {
         StartCoroutine(AddScoreOverTime());
@@ -89,10 +88,10 @@ public class ScoreManager : MonoBehaviour
             yield return _delay;
             if (_pauseMenu.IsPaused)
             {
-                isReadyToAddScore = true;
+                _isReadyToAddScore = true;
                 yield break;
             }
-            AddScore(timeScoreIncrement);
+            AddScore(TimeScoreIncrement);
             StartAddingScorePerSecond();
         }
     }

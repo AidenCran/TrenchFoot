@@ -27,8 +27,6 @@ namespace Units
         // UI Extracted To UI Script
         [SerializeField] Button buyRiflemanButton;
 
-        readonly WaitForSeconds _enemyAdditionalDelay = new(2);
-
         readonly Dictionary<UnitType, IUnit> _unitDict = new();
 
         bool _canAllySpawn = true;
@@ -103,9 +101,13 @@ namespace Units
             IEnumerator AutoSpawn()
             {
                 yield return unit.SpawnDelay();
-                yield return _enemyAdditionalDelay;
 
                 SpawnUnit(unit, false);
+
+                // X Percent of the time
+                var waveChance = 5;
+                var random = Random.Range(0, 100);
+                if (random < waveChance) SpawnManyEnemies();
 
                 // Repeat (Could Change To While Loop)
                 if (_pauseMenu.IsPaused)
@@ -117,6 +119,15 @@ namespace Units
                 if (_gameHandler.IsGameOver) yield break;
                 
                 StartCoroutine(AutoSpawn());
+            }
+        }
+
+        void SpawnManyEnemies()
+        {
+            int count = 3;
+            for (int i = 0; i < count; i++)
+            {
+                SpawnUnit(_unitDict[UnitType.Rifleman], false);
             }
         }
 

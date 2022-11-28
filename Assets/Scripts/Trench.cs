@@ -14,12 +14,10 @@ using Utility;
 public class Trench : MonoBehaviour
 {
     // TODO: Units Enter Exit Trench
-    [SerializeField] List<UnitAbstract> _unitsInTrench = new();
+    [SerializeField] List<UnitAbstract> unitsInTrench = new();
 
     const int MaxTrenchUnitCount = 6;
     const float Delay = .25f;
-
-    int _countInTrench = 0;
 
     HelperMonoBehaviour _helperMonoBehaviour;
 
@@ -27,58 +25,69 @@ public class Trench : MonoBehaviour
     
     const float Duration = 0.5f;
 
-    [SerializeField] bool IsTrenchEmpty => _countInTrench == 0;
+    [SerializeField] bool IsTrenchEmpty => unitsInTrench.Count == 0;
 
-    const float _trenchHitReduction = 15f;
+    const float TrenchHitReduction = 10f;
 
-    [SerializeField] List<UnitAbstract> _awaitingToEnterTrench = new();
+    [SerializeField] List<UnitAbstract> awaitingToEnterTrench = new();
 
-    [SerializeField] Button _chargeButton;
+    [SerializeField] Button chargeButton;
     
     bool _purgeCooldownActive;
 
     void Start()
     {
         _helperMonoBehaviour = HelperMonoBehaviour.Instance;
-        _chargeButton.interactable = isAllyTrench;
-        _chargeButton.onClick.AddListener(Purge);
+        chargeButton.interactable = isAllyTrench;
+        chargeButton.onClick.AddListener(Purge);
+    }
+
+    void Update()
+    {
+        CheckIfTrenchIsEmpty();
     }
 
     void OnTriggerEnter2D(Collider2D col)
     {
         if (!col.TryGetComponent<UnitAbstract>(out var unit)) return;
-
-        if (_unitsInTrench.Count == 0)
-        {
-            EnterTrench(unit);
-            return;
-        }
-
-        if (unit.isAlly == _unitsInTrench[0].isAlly)
-        {
-            EnterTrench(unit);
-        }
-        
-        if (unit.isAlly != _unitsInTrench[0].isAlly)
-        {
-            // Await Entering Trench
-            unit.isAttackingTrench = true;
-            _awaitingToEnterTrench.Add(unit);
-            return;
-        }
+        TryEnterTrench(unit);
     }
+
+    void TryEnterTrench(UnitAbstract unit)
+    {
+        FilterOutDeadUnits();
+        
+        if (IsTrenchEmpty || unit.isAlly == unitsInTrench[0].isAlly)
+        {
+            EnterTrench(unit);
+            return;
+        }
+
+        // Else
+        // Opposition Attempts To Enter Trench
+        
+        // Await Entering Trench
+        if (awaitingToEnterTrench.Contains(unit)) return;
+        awaitingToEnterTrench.Add(unit);
+        unit.isAttackingTrench = true;
+
+        CheckIfTrenchIsEmpty();
+    }
+
+    void FilterOutDeadUnits() => unitsInTrench = unitsInTrench.Where((x) => x != null && !x.IsDead).ToList();
 
     void EnterTrench(UnitAbstract unit)
     {
-        if (_unitsInTrench.Contains(unit)) return;
+        // Just Exited Trench
+        if (unit.trenchCooldown) return;
+        if (unitsInTrench.Contains(unit)) return;
 
-        _unitsInTrench = _unitsInTrench.Where((x) => x != null).ToList();
+        unitsInTrench = unitsInTrench.Where((x) => x != null).ToList();
         
-        _unitsInTrench.Add(unit);
-        _countInTrench++;
-        
+        unitsInTrench.Add(unit);
+
         unit.isInTrench = true;
-        unit.hitChance -= _trenchHitReduction;
+        unit.hitChance -= TrenchHitReduction;
 
         unit.OnDeath?.AddListener(RemoveUnit);
 
@@ -96,25 +105,35 @@ public class Trench : MonoBehaviour
         newPos.y -= unit.GetRenderer.size.y / 2;
         unit.transform.DOMove(newPos, Duration + 1).OnComplete(() =>
         {
-            if (_countInTrench < MaxTrenchUnitCount) return;
+            if (unitsInTrench.Count < MaxTrenchUnitCount) return;
             ExitTrench(unit);
         });
     }
 
     void CheckIfTrenchIsEmpty()
     {
-        if (_unitsInTrench.Count != 0) return;
-        if (_awaitingToEnterTrench.Count <= 0) return;
+        FilterOutDeadUnits();
         
-        _unitsInTrench.Clear();
+        if (unitsInTrench.Count != 0) return;
+        if (awaitingToEnterTrench.Count <= 0) return;
         
-        isAllyTrench = _awaitingToEnterTrench[0].isAlly;
-        _chargeButton.interactable = isAllyTrench;
-        
-        foreach (var unit in _awaitingToEnterTrench)
+        SwapInAwaitingUnits();
+
+        void SwapInAwaitingUnits()
         {
-            unit.isAttackingTrench = false;
-            EnterTrench(unit);
+            unitsInTrench.Clear();
+
+            isAllyTrench = awaitingToEnterTrench[0].isAlly;
+            chargeButton.interactable = isAllyTrench;
+            
+            // Check Dead Bodies Too
+            foreach (var unit in awaitingToEnterTrench.Where(unit => unit != null))
+            {
+                unit.isAttackingTrench = false;
+                EnterTrench(unit);
+            }
+
+            awaitingToEnterTrench.Clear();
         }
     }
 
@@ -125,35 +144,43 @@ public class Trench : MonoBehaviour
 
         if (unit.state == UnitStates.Dead) return;
 
+        unit.trenchCooldown = true;
+        
         // Tween Unit Out Of Trench
         var newPos = unit.transform.position;
         newPos.x += unit.isAlly ? 1f : -1f;
         newPos.y += unit.GetRenderer.size.y / 2;
         unit.transform.DOMove(newPos, Duration);
         
+        unit.OnDeath?.RemoveListener(RemoveUnit);
+        
         // Play Exit Anim
         unit.ExitTrenchAnim();
         
+        
         // After Anim
-        _helperMonoBehaviour.InvokeActionOnComplete(() =>
+        StartCoroutine(Delay());
+        IEnumerator Delay()
         {
+            yield return Helper.GetWait(0.25f);
             unit.isInTrench = false;
-            unit.hitChance += _trenchHitReduction;
-        }, Delay);
+            unit.hitChance += TrenchHitReduction;
+            yield return Helper.GetWait(0.5f);
+            unit.trenchCooldown = false;
+        }
     }
     
     void RemoveUnit(UnitAbstract unit)
     {
-        _unitsInTrench.Remove(unit);
+        unitsInTrench.Remove(unit);
         unit.OnDeath?.RemoveListener(RemoveUnit);
-        _countInTrench--;
         CheckIfTrenchIsEmpty();
     }
 
     // Sprite Layering
     void SetUnitLayers()
     {
-        var arr = _unitsInTrench.Where((x) => x != null && !x.IsDead).OrderBy((x) => x.transform.position.y).Reverse().ToArray();
+        var arr = unitsInTrench.Where((x) => x != null && !x.IsDead).OrderBy((x) => x.transform.position.y).Reverse().ToArray();
         for (var i = 0; i < arr.Length; i++)
         {
             arr[i].GetRenderer.sortingOrder = 100 + i;
@@ -164,15 +191,13 @@ public class Trench : MonoBehaviour
     void Purge()
     {
         if (_purgeCooldownActive) return;
-        if (_unitsInTrench == null) return;
-        if (_unitsInTrench.Count == 0) return;
+        if (unitsInTrench == null) return;
+        if (unitsInTrench.Count == 0) return;
 
         PurgeCooldown();
         
-        for (var i = 0; i < _unitsInTrench.Count; i++)
+        foreach (var unit in unitsInTrench.Where((x)=>x != null).ToList())
         {
-            var unit = _unitsInTrench[i];
-            if (unit == null) continue;
             ExitTrench(unit);
         }
     }
@@ -183,7 +208,7 @@ public class Trench : MonoBehaviour
         IEnumerator Cooldown()
         {
             _purgeCooldownActive = true;
-            _chargeButton.interactable = false;
+            chargeButton.interactable = false;
             yield return Helper.GetWait(5);
             
             _purgeCooldownActive = false;
@@ -195,8 +220,8 @@ public class Trench : MonoBehaviour
     void SetPurgeAccess()
     {
         if (_purgeCooldownActive) return;
-        if (_unitsInTrench.Count == 0) return;
+        if (unitsInTrench.Count == 0) return;
         
-        _chargeButton.interactable = _unitsInTrench[0].isAlly;
+        chargeButton.interactable = unitsInTrench[0].isAlly;
     }
 }

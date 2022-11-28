@@ -502,15 +502,41 @@ MonoBehaviour:
       shown: 0
     - name: WindZone
       shown: 0
+    - name: CameraPan
+      shown: 0
+    - name: GameHandler
+      shown: 0
+    - name: BaseTower
+      shown: 0
+    - name: ChangeScene
+      shown: 0
+    - name: Panels
+      shown: 0
+    - name: Quit
+      shown: 0
+    - name: ScoreManager
+      shown: 0
+    - name: SoundManager
+      shown: 0
+    - name: SoundReference
+      shown: 0
+    - name: Trench
+      shown: 0
+    - name: PauseHandler
+      shown: 0
+    - name: PauseMenu
+      shown: 0
+    - name: PauseReference
+      shown: 0
     - name: AnimUIToPosition
       shown: 0
     - name: FadeUI
       shown: 0
     - name: FloatAnim
       shown: 0
-    - name: Helper
-      shown: 0
     - name: LightIntensityAnim
+      shown: 0
+    - name: MainCanvasAnim
       shown: 0
     - name: Navigation
       shown: 0
@@ -520,9 +546,111 @@ MonoBehaviour:
       shown: 0
     - name: ShakeCamera
       shown: 0
+    - name: StartMenuMusic
+      shown: 0
+    - name: ChatController
+      shown: 0
+    - name: DropdownSample
+      shown: 0
+    - name: EnvMapAnimator
+      shown: 0
+    - name: TMP_TextEventHandler
+      shown: 0
+    - name: Benchmark01
+      shown: 0
+    - name: Benchmark01_UGUI
+      shown: 0
+    - name: Benchmark02
+      shown: 0
+    - name: Benchmark03
+      shown: 0
+    - name: Benchmark04
+      shown: 0
+    - name: CameraController
+      shown: 0
+    - name: ObjectSpin
+      shown: 0
+    - name: ShaderPropAnimator
+      shown: 0
+    - name: SimpleScript
+      shown: 0
+    - name: SkewTextExample
+      shown: 0
+    - name: TeleType
+      shown: 0
+    - name: TextConsoleSimulator
+      shown: 0
+    - name: TextMeshProFloatingText
+      shown: 0
+    - name: TextMeshSpawner
+      shown: 0
+    - name: TMPro_InstructionOverlay
+      shown: 0
+    - name: TMP_ExampleScript_01
+      shown: 0
+    - name: TMP_FrameRateCounter
+      shown: 0
+    - name: TMP_TextEventCheck
+      shown: 0
+    - name: TMP_TextInfoDebugTool
+      shown: 0
+    - name: TMP_TextSelector_A
+      shown: 0
+    - name: TMP_TextSelector_B
+      shown: 0
+    - name: TMP_UiFrameRateCounter
+      shown: 0
+    - name: VertexColorCycler
+      shown: 0
+    - name: VertexJitter
+      shown: 0
+    - name: VertexShakeA
+      shown: 0
+    - name: VertexShakeB
+      shown: 0
+    - name: VertexZoom
+      shown: 0
+    - name: WarpTextExample
+      shown: 0
+    - name: HelperMonoBehaviour
+      shown: 0
+    - name: Riflemen
+      shown: 0
+    - name: SpawnUnits
+      shown: 0
+    - name: UnitAbstract
+      shown: 0
+    - name: UnitManager
+      shown: 0
+    - name: UnitStateMachine
+      shown: 0
     - name: CinemachinePixelPerfect
       shown: 0
     - name: PixelPerfectCamera
+      shown: 0
+    - name: PlayerInput
+      shown: 0
+    - name: PlayerInputManager
+      shown: 0
+    - name: TrackedPoseDriver
+      shown: 0
+    - name: BaseInputOverride
+      shown: 0
+    - name: InputSystemUIInputModule
+      shown: 0
+    - name: MultiplayerEventSystem
+      shown: 0
+    - name: TrackedDeviceRaycaster
+      shown: 0
+    - name: VirtualMouseInput
+      shown: 0
+    - name: OnScreenButton
+      shown: 0
+    - name: OnScreenControl
+      shown: 0
+    - name: OnScreenStick
+      shown: 0
+    - name: TouchSimulation
       shown: 0
     - name: Button
       shown: 0
@@ -622,6 +750,102 @@ MonoBehaviour:
       shown: 0
     - name: Solver2D
       shown: 0
+    - name: CinemachineCameraOffset
+      shown: 0
+    - name: CinemachineRecomposer
+      shown: 0
+    - name: CinemachineTouchInputMapper
+      shown: 0
+    - name: Cinemachine3rdPersonAim
+      shown: 0
+    - name: CinemachineBlendListCamera
+      shown: 0
+    - name: CinemachineBrain
+      shown: 0
+    - name: CinemachineClearShot
+      shown: 0
+    - name: CinemachineCollider
+      shown: 0
+    - name: CinemachineConfiner
+      shown: 0
+    - name: CinemachineConfiner2D
+      shown: 0
+    - name: CinemachineDollyCart
+      shown: 0
+    - name: CinemachineExternalCamera
+      shown: 0
+    - name: CinemachineFollowZoom
+      shown: 0
+    - name: CinemachineFreeLook
+      shown: 0
+    - name: CinemachineMixingCamera
+      shown: 0
+    - name: CinemachinePath
+      shown: 0
+    - name: CinemachinePipeline
+      shown: 0
+    - name: CinemachinePixelPerfect
+      shown: 0
+    - name: CinemachineSmoothPath
+      shown: 0
+    - name: CinemachineStateDrivenCamera
+      shown: 0
+    - name: CinemachineStoryboard
+      shown: 0
+    - name: CinemachineTargetGroup
+      shown: 0
+    - name: CinemachineVirtualCamera
+      shown: 0
+    - name: Cinemachine3rdPersonFollow
+      shown: 0
+    - name: CinemachineBasicMultiChannelPerlin
+      shown: 0
+    - name: CinemachineComposer
+      shown: 0
+    - name: CinemachineFramingTransposer
+      shown: 0
+    - name: CinemachineGroupComposer
+      shown: 0
+    - name: CinemachineHardLockToTarget
+      shown: 0
+    - name: CinemachineHardLookAt
+      shown: 0
+    - name: CinemachineOrbitalTransposer
+      shown: 0
+    - name: CinemachinePOV
+      shown: 0
+    - name: CinemachineSameAsFollowTarget
+      shown: 0
+    - name: CinemachineTrackedDolly
+      shown: 0
+    - name: CinemachineTransposer
+      shown: 0
+    - name: CinemachineComponentBase
+      shown: 0
+    - name: CinemachineExtension
+      shown: 0
+    - name: CinemachinePathBase
+      shown: 0
+    - name: CinemachineVirtualCameraBase
+      shown: 0
+    - name: CinemachineInputProvider
+      shown: 0
+    - name: CinemachineTriggerAction
+      shown: 0
+    - name: GroupWeightManipulator
+      shown: 0
+    - name: CinemachineCollisionImpulseSource
+      shown: 0
+    - name: CinemachineImpulseListener
+      shown: 0
+    - name: CinemachineImpulseSource
+      shown: 0
+    - name: CinemachineIndependentImpulseListener
+      shown: 0
+    - name: CinemachinePostProcessing
+      shown: 0
+    - name: CinemachineVolumeSettings
+      shown: 0
     - name: GridInformation
       shown: 0
     - name: PixelPerfectCamera
@@ -641,6 +865,12 @@ MonoBehaviour:
     - name: UniversalAdditionalCameraData
       shown: 0
     - name: UniversalAdditionalLightData
+      shown: 0
+    - name: ExampleScript
+      shown: 0
+    - name: ExampleScript2
+      shown: 0
+    - name: ExampleScriptWithIcon
       shown: 0
     - name: PlaymodeTestsController
       shown: 0
@@ -893,108 +1123,6 @@ MonoBehaviour:
     - name: SpriteShapeController
       shown: 0
     - name: StateMachine
-      shown: 0
-    - name: CinemachineCameraOffset
-      shown: 0
-    - name: CinemachineRecomposer
-      shown: 0
-    - name: CinemachineTouchInputMapper
-      shown: 0
-    - name: Cinemachine3rdPersonAim
-      shown: 0
-    - name: CinemachineBlendListCamera
-      shown: 0
-    - name: CinemachineBrain
-      shown: 0
-    - name: CinemachineClearShot
-      shown: 0
-    - name: CinemachineCollider
-      shown: 0
-    - name: CinemachineConfiner
-      shown: 0
-    - name: CinemachineConfiner2D
-      shown: 0
-    - name: CinemachineDollyCart
-      shown: 0
-    - name: CinemachineExternalCamera
-      shown: 0
-    - name: CinemachineFollowZoom
-      shown: 0
-    - name: CinemachineFreeLook
-      shown: 0
-    - name: CinemachineMixingCamera
-      shown: 0
-    - name: CinemachinePath
-      shown: 0
-    - name: CinemachinePipeline
-      shown: 0
-    - name: CinemachinePixelPerfect
-      shown: 0
-    - name: CinemachineSmoothPath
-      shown: 0
-    - name: CinemachineStateDrivenCamera
-      shown: 0
-    - name: CinemachineStoryboard
-      shown: 0
-    - name: CinemachineTargetGroup
-      shown: 0
-    - name: CinemachineVirtualCamera
-      shown: 0
-    - name: Cinemachine3rdPersonFollow
-      shown: 0
-    - name: CinemachineBasicMultiChannelPerlin
-      shown: 0
-    - name: CinemachineComposer
-      shown: 0
-    - name: CinemachineFramingTransposer
-      shown: 0
-    - name: CinemachineGroupComposer
-      shown: 0
-    - name: CinemachineHardLockToTarget
-      shown: 0
-    - name: CinemachineHardLookAt
-      shown: 0
-    - name: CinemachineOrbitalTransposer
-      shown: 0
-    - name: CinemachinePOV
-      shown: 0
-    - name: CinemachineSameAsFollowTarget
-      shown: 0
-    - name: CinemachineTrackedDolly
-      shown: 0
-    - name: CinemachineTransposer
-      shown: 0
-    - name: CinemachineComponentBase
-      shown: 0
-    - name: CinemachineExtension
-      shown: 0
-    - name: CinemachinePathBase
-      shown: 0
-    - name: CinemachineVirtualCameraBase
-      shown: 0
-    - name: CinemachineInputProvider
-      shown: 0
-    - name: CinemachineTriggerAction
-      shown: 0
-    - name: GroupWeightManipulator
-      shown: 0
-    - name: CinemachineCollisionImpulseSource
-      shown: 0
-    - name: CinemachineImpulseListener
-      shown: 0
-    - name: CinemachineImpulseSource
-      shown: 0
-    - name: CinemachineIndependentImpulseListener
-      shown: 0
-    - name: CinemachinePostProcessing
-      shown: 0
-    - name: CinemachineVolumeSettings
-      shown: 0
-    - name: ExampleScript
-      shown: 0
-    - name: ExampleScript2
-      shown: 0
-    - name: ExampleScriptWithIcon
       shown: 0
     - name: DOTweenComponent
       shown: 0
