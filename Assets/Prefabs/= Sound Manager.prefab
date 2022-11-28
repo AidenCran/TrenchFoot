@@ -177,6 +177,12 @@ MonoBehaviour:
   musicSource: {fileID: 2519055585567904539}
   soundSource: {fileID: 2519055585420445581}
   defaultMusic: {fileID: 8300000, guid: b1b06f2b3ae5efc48a00693545ba278b, type: 3}
+  menuMusic:
+  - {fileID: 8300000, guid: b1b06f2b3ae5efc48a00693545ba278b, type: 3}
+  levelMusic:
+  - {fileID: 8300000, guid: 3bd9984a54d53444a9b0e753b48e03c2, type: 3}
+  - {fileID: 8300000, guid: 5dec8da58fb53bb4ebd10551448db1ed, type: 3}
+  - {fileID: 8300000, guid: dad1211c4959ee24b91b45fb388f41e4, type: 3}
   randomBackgroundSounds: []
 --- !u!1 &2519055585567904541
 GameObject:

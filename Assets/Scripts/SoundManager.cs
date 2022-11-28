@@ -62,21 +62,13 @@ public class SoundManager : MonoBehaviour
     void Awake()
     {
         Singleton();
-
-        musicSource.loop = true;
-        _musicMaxVolume = musicSource.volume;
-        musicSource.volume = 0;
-
-        // Set Volume = 60%
-        _setVolume = _musicMaxVolume * .60f;
     }
 
     void Start()
     {
-        if (defaultMusic == null) return;
-        PlayMusic(defaultMusic);
-
-        InvokeRepeating(nameof(PlayRandomBackgroundSound), 15, 15);
+        // if (defaultMusic == null) return;
+        // PlayMusic(defaultMusic);
+        PlayMenuMusic();
     }
 
     public void PlayMusic(AudioClip clip)
@@ -89,19 +81,6 @@ public class SoundManager : MonoBehaviour
     {
         soundSource.clip = clip;
         soundSource.Play();
-    }
-
-    public void PlaySound(AudioClip clip, float skipToTime)
-    {
-        soundSource.time = skipToTime;
-        soundSource.clip = clip;
-        soundSource.Play();
-    }
-
-    void PlayRandomBackgroundSound()
-    {
-        if (randomBackgroundSounds.Count == 0) return;
-        PlaySound(randomBackgroundSounds.SelectRandom());
     }
 
     public void PlayMenuMusic() => PlayMusic(menuMusic.SelectRandom());

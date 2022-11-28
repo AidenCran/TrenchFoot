@@ -12,9 +12,10 @@ namespace Units
 {
     public abstract class UnitAbstract : MonoBehaviour, IDamageable
     {
-        [HideInInspector] public UnityEvent<UnitAbstract> OnDeath;
-        [HideInInspector] public Action OnRelease;
-        
+        // ReSharper disable once UnassignedField.Global
+        [NonSerialized] public UnityEvent<UnitAbstract> OnDeath;
+        [field: HideInInspector] public Action OnRelease { get; set; }
+
         protected TempEntityStats Stats;
         
         // TODO: Hit Chance = Lower It In Trench
@@ -31,7 +32,6 @@ namespace Units
         bool _isCooldownActive;
         const float ReloadDelay = 0.5f;
         public float hitChance = 75;
-
 
         public UnitStates state = UnitStates.Walking;
         public bool IsDead => state == UnitStates.Dead;
@@ -58,14 +58,8 @@ namespace Units
             _rb = GetComponent<Rigidbody2D>();
             animator = GetComponentInChildren<Animator>();
             GetRenderer = GetComponentInChildren<SpriteRenderer>();
-            
-            Stats = new TempEntityStats
-            {
-                CurrentHealth = 15,
-                MoveSpeed = .75f,
-                Damage = 5,
-                Range = 5f,
-            };
+
+            Stats = new TempEntityStats(0.25f, 5, 5, 15);
             
             state = UnitStates.Walking;
 
@@ -78,7 +72,6 @@ namespace Units
         protected virtual void Start()
         {
             _pauseMenu = PauseMenu.instance;
-            
             Init();
         }
 
@@ -98,8 +91,6 @@ namespace Units
             if (state == UnitStates.InTrench) return false;
             if (isAttackingTrench) return false;
             if (isInTrench) return false;
-
-            if (state == UnitStates.Invincible) return true;
 
             return true;
         }
@@ -125,10 +116,10 @@ namespace Units
             animator.CrossFade(_idle, 0, 0);
 
             // Select Direction
-            var direction = isAlly ? Vector2.right : Vector2.left;
+            var direction = isAlly ? 1 : -1;
             
             // Set Velocity
-            _rb.velocity = new Vector2(direction.x * Stats.MoveSpeed, 0);
+            _rb.velocity = new Vector2(direction * Stats.MoveSpeed, 0);
         }
 
         /// <summary>
@@ -146,7 +137,7 @@ namespace Units
             if (!x.Item2) return false;
 
             // Await To Shoot
-            if (_isCooldownActive || x.Item1.state == UnitStates.Invincible) return true;
+            if (_isCooldownActive) return true;
             
             // Shoot
             ShootUnit(x.Item1);
@@ -169,7 +160,7 @@ namespace Units
         /// <returns></returns>
         (UnitAbstract, bool) UnitInRange()
         {
-            var x = Physics2D.OverlapBox(AttackPoint(), _unitAttackRange, 0, oppositionLayerMask);
+            var x = Physics2D.OverlapBox(transform.position, _unitAttackRange, 0, oppositionLayerMask);
             if (x == null) return (null, false);
             
             x.TryGetComponent<UnitAbstract>(out var unit);

@@ -34,11 +34,11 @@ public class BaseTower : MonoBehaviour, IDamageable
         {
             case true:
                 // Lose Screen
-                
+                GameHandler.instance.LoseGame();
                 break;
             case false:
                 // Win Screen
-                
+                GameHandler.instance.WinGame();
                 break;
         }
     }

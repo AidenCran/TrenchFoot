@@ -35,14 +35,17 @@ namespace Units
 
         // Score Manager Stays
         ScoreManager _scoreManager;
-
         PauseMenu _pauseMenu;
+        GameHandler _gameHandler;
+
 
         bool _readyToSpawnEnemy;
         bool _readyToSpawnAlly;
         
         void Start()
         {
+            _gameHandler = GameHandler.instance;
+            
             _pauseMenu = PauseMenu.instance;
             _pauseMenu.OnPauseEvent.AddListener((isPaused) =>
             {
@@ -52,14 +55,11 @@ namespace Units
                     AutoSpawnEnemies(_unitDict[UnitType.Rifleman]);
                 }
             });
-            
-            SoundManager _soundManager = SoundManager.instance;
-            _soundManager.PlayLevelMusic();
-            
+
             _unitDict.Add(UnitType.Rifleman, new RiflemenRecord());
 
             _scoreManager = ScoreManager.instance;
-            ;
+
             buyRiflemanButton.onClick.AddListener(() =>
             {
                 var x = _unitDict[UnitType.Rifleman];
@@ -78,6 +78,7 @@ namespace Units
         void Update()
         {
             if (_pauseMenu.IsPaused) return;
+            if (_gameHandler.IsGameOver) return;
             
             // TEMP FOR GAME JAM :)
             if (!_canAllySpawn)
@@ -94,6 +95,7 @@ namespace Units
             return Random.Range(-spawnHeight / 2, spawnHeight / 2);
         }
 
+        
         void AutoSpawnEnemies(IUnit unit)
         {
             StartCoroutine(AutoSpawn());
@@ -111,6 +113,8 @@ namespace Units
                     _readyToSpawnEnemy = true;
                     yield break;
                 }
+
+                if (_gameHandler.IsGameOver) yield break;
                 
                 StartCoroutine(AutoSpawn());
             }
